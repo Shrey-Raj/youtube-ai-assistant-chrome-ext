@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { chatWithVideo } from '../../utils/api';
+import { getStoredChat, storeChat, removeChat } from '../../utils/storage';
 
 interface ChatProps {
   videoId: string;
@@ -17,6 +18,7 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
   const [message, setMessage] = useState('');
   const [conversation, setConversation] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -26,6 +28,29 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
   useEffect(() => {
     scrollToBottom();
   }, [conversation]);
+
+  // Load chat history when component mounts or videoId changes
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      setIsLoadingHistory(true);
+      try {
+        const storedChat = await getStoredChat(videoId);
+        if (storedChat) {
+          setConversation(storedChat);
+          console.log('Loaded chat history for video:', videoId);
+        } else {
+          setConversation([]);
+        }
+      } catch (error) {
+        console.error('Error loading chat history:', error);
+        setConversation([]);
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    };
+
+    loadChatHistory();
+  }, [videoId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +71,8 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
         updatedConversation
       );
       
-      setConversation(prev => [...prev, { role: 'model', content: aiResponse }]);
+      const finalConversation = [...updatedConversation, { role: 'model', content: aiResponse }];
+      setConversation(finalConversation);
     } catch (error) {
       console.error('Chat error:', error);
       setConversation(prev => [...prev, { 
@@ -58,6 +84,16 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
     }
   };
 
+  const handleClearChat = async () => {
+    try {
+      await removeChat(videoId);
+      setConversation([]);
+      console.log('Cleared chat history for video:', videoId);
+    } catch (error) {
+      console.error('Error clearing chat:', error);
+    }
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -65,18 +101,50 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
     }
   };
 
+  if (isLoadingHistory) {
+    return (
+      <div className="p-6 h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <p className="text-gray-400 text-sm">Loading chat history...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 h-full flex flex-col">
       <div className="flex-1 bg-dark-800/30 backdrop-blur-sm border border-white/10 rounded-xl flex flex-col overflow-hidden">
         {/* Chat Header */}
         <div className="p-4 border-b border-white/10">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white">AI Chat</h3>
+                {conversation.length > 0 && (
+                  <p className="text-xs text-gray-400">
+                    {conversation.length} messages • Cached
+                  </p>
+                )}
+              </div>
             </div>
-            <h3 className="text-lg font-semibold text-white">AI Chat</h3>
+            
+            {conversation.length > 0 && (
+              <button
+                onClick={handleClearChat}
+                className="px-3 py-1.5 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/30 hover:border-red-500/50 rounded-lg transition-all duration-200"
+                title="Clear chat history"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
 
@@ -85,7 +153,7 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
           {conversation.length === 0 && (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-gradient-to-r from-primary-500/20 to-primary-700/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-primary-400\" fill="none\" stroke="currentColor\" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
@@ -128,9 +196,7 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
                   >
                     {msg.content}
                   </ReactMarkdown>
-
                 </div>
-
               </div>
             </div>
           ))}

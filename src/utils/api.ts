@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getStoredSummary, storeSummary, getStoredChat, storeChat } from './storage';
 
 const getApiKey = async (): Promise<string> => {
   return new Promise((resolve) => {
@@ -14,6 +15,13 @@ export const getVideoSummary = async (
   transcript: string | null
 ): Promise<string> => {
   try {
+    // Check if summary is already cached
+    const cachedSummary = await getStoredSummary(videoId);
+    if (cachedSummary) {
+      console.log('Using cached summary for video:', videoId);
+      return cachedSummary;
+    }
+
     const apiKey = await getApiKey();
     if (!apiKey) {
       return 'Please set your Gemini API key in extension settings';
@@ -44,7 +52,13 @@ export const getVideoSummary = async (
     }
     
     const result = await model.generateContent(prompt);
-    return result.response.text();
+    const summary = result.response.text();
+    
+    // Store the summary for future use
+    await storeSummary(videoId, videoTitle, summary);
+    console.log('Generated and cached new summary for video:', videoId);
+    
+    return summary;
   } catch (error: any) {
     console.error('Summary error:', error);
     return 'Failed to generate summary. Transcript might be unavailable.';
@@ -89,7 +103,14 @@ export const chatWithVideo = async (
     
     const lastMessage = history[history.length - 1].content;
     const result = await chat.sendMessage(lastMessage);
-    return result.response.text();
+    const response = result.response.text();
+    
+    // Store the updated conversation
+    const updatedHistory = [...history, { role: 'model', content: response }];
+    await storeChat(videoId, videoTitle, updatedHistory);
+    console.log('Updated chat history for video:', videoId);
+    
+    return response;
   } catch (error) {
     console.error('Chat error:', error);
     return "I'm having trouble answering that. Please try again.";

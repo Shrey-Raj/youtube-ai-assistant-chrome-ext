@@ -5,6 +5,7 @@ import Navigation from './components/Navigation';
 import LoadingSpinner from './components/LoadingSpinner';
 import ErrorMessage from './components/ErrorMessage';
 import { getVideoSummary } from '../utils/api';
+import { getStoredSummary } from '../utils/storage';
 
 type ActiveTab = 'summary' | 'chat';
 
@@ -55,6 +56,25 @@ const App: React.FC = () => {
       setError(null);
     } catch (error) {
       setError('Failed to load summary');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSummaryCleared = async () => {
+    if (!videoId) return;
+    
+    // Regenerate summary after clearing
+    setSummary('');
+    setLoading(true);
+    
+    try {
+      const summaryText = await getVideoSummary(videoId, videoTitle, transcript);
+      setSummary(summaryText);
+      setError(null);
+    } catch (error) {
+      setError('Failed to regenerate summary');
       console.error(error);
     } finally {
       setLoading(false);
@@ -148,7 +168,11 @@ const App: React.FC = () => {
       {/* Content */}
       <div className="flex-1 overflow-hidden">
         {activeTab === 'summary' ? (
-          <Summary text={summary} />
+          <Summary 
+            text={summary} 
+            videoId={videoId}
+            onSummaryCleared={handleSummaryCleared}
+          />
         ) : (
           <Chat 
             videoId={videoId} 
