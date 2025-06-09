@@ -17,10 +17,12 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>('summary');
+  const [transcriptLoading, setTranscriptLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchVideoData = async () => {
       try {
+        setLoading(true);
         chrome.runtime.sendMessage(
           { type: 'GET_VIDEO_DATA' }, 
           async (response) => {
@@ -28,7 +30,16 @@ const App: React.FC = () => {
               setVideoId(response.videoId);
               setVideoTitle(response.videoTitle);
               setTranscript(response.transcript);
-              fetchSummary(response.videoId, response.videoTitle, response.transcript);
+              
+              // If transcript is available, proceed with summary
+              if (response.transcript) {
+                console.log('Transcript available, generating summary...');
+                fetchSummary(response.videoId, response.videoTitle, response.transcript);
+              } else {
+                console.log('No transcript initially available, will try to load...');
+                // Still generate summary but show warning
+                fetchSummary(response.videoId, response.videoTitle, null);
+              }
             } else {
               setError('Please open a YouTube video first');
               setLoading(false);
@@ -82,15 +93,28 @@ const App: React.FC = () => {
   };
 
   const handleOpenTranscript = () => {
+    setTranscriptLoading(true);
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const tab = tabs[0];
       if (tab.id) {
         chrome.tabs.sendMessage(tab.id, { 
           type: 'OPEN_TRANSCRIPT' 
         });
+        
+        // Wait a moment then try to get transcript again
+        setTimeout(() => {
+          chrome.tabs.sendMessage(tab.id, { 
+            type: 'GET_VIDEO_DETAILS' 
+          }, (response) => {
+            if (response?.transcript) {
+              setTranscript(response.transcript);
+              console.log('Transcript loaded after manual open');
+            }
+            setTranscriptLoading(false);
+          });
+        }, 2000);
       }
     });
-    window.close();
   };
 
   if (loading) {
@@ -149,14 +173,40 @@ const App: React.FC = () => {
               <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
             <div className="flex-1">
-              <p className="text-sm text-yellow-200 font-medium">Transcript not available</p>
-              <p className="text-xs text-yellow-300/80 mt-1">Summary may be limited without transcript data.</p>
-              <button 
-                onClick={handleOpenTranscript}
-                className="mt-2 px-3 py-1 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/40 rounded-md text-xs text-yellow-200 transition-colors duration-200"
-              >
-                Open Transcript
-              </button>
+              <p className="text-sm text-yellow-200 font-medium">
+                {transcriptLoading ? 'Loading transcript...' : 'Transcript not available'}
+              </p>
+              <p className="text-xs text-yellow-300/80 mt-1">
+                {transcriptLoading 
+                  ? 'Please wait while we load the transcript data.'
+                  : 'Summary may be limited without transcript data.'
+                }
+              </p>
+              {!transcriptLoading && (
+                <button 
+                  onClick={handleOpenTranscript}
+                  className="mt-2 px-3 py-1 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/40 rounded-md text-xs text-yellow-200 transition-colors duration-200"
+                >
+                  Try Loading Transcript
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success message for transcript */}
+      {transcript && (
+        <div className="mx-4 mt-4 p-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-lg animate-fade-in">
+          <div className="flex items-center space-x-3">
+            <svg className="w-5 h-5 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <div className="flex-1">
+              <p className="text-sm text-green-200 font-medium">Transcript loaded successfully</p>
+              <p className="text-xs text-green-300/80 mt-1">
+                Enhanced summary and chat available with full transcript data.
+              </p>
             </div>
           </div>
         </div>
