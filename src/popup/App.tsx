@@ -18,6 +18,7 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>('summary');
   const [transcriptLoading, setTranscriptLoading] = useState<boolean>(false);
+  const [showSuccessBanner, setShowSuccessBanner] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchVideoData = async () => {
@@ -31,8 +32,9 @@ const App: React.FC = () => {
               setVideoTitle(response.videoTitle);
               setTranscript(response.transcript);
               
-              // If transcript is available, proceed with summary
+              // Show success banner if transcript is available
               if (response.transcript) {
+                setShowSuccessBanner(true);
                 console.log('Transcript available, generating summary...');
                 fetchSummary(response.videoId, response.videoTitle, response.transcript);
               } else {
@@ -108,6 +110,7 @@ const App: React.FC = () => {
           }, (response) => {
             if (response?.transcript) {
               setTranscript(response.transcript);
+              setShowSuccessBanner(true);
               console.log('Transcript loaded after manual open');
             }
             setTranscriptLoading(false);
@@ -195,8 +198,8 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Success message for transcript */}
-      {transcript && (
+      {/* Success message for transcript with close button */}
+      {transcript && showSuccessBanner && (
         <div className="mx-4 mt-4 p-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-lg animate-fade-in">
           <div className="flex items-center space-x-3">
             <svg className="w-5 h-5 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -208,6 +211,15 @@ const App: React.FC = () => {
                 Enhanced summary and chat available with full transcript data.
               </p>
             </div>
+            <button
+              onClick={() => setShowSuccessBanner(false)}
+              className="p-1 text-green-400 hover:text-green-300 hover:bg-green-500/10 rounded transition-colors duration-200"
+              title="Close notification"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         </div>
       )}
