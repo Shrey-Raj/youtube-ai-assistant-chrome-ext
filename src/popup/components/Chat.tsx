@@ -82,7 +82,7 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || isLoading || selectedChat) return;
+    if (!message.trim() || isLoading) return;
 
     const userMessage: Message = { role: 'user', content: message };
     const updatedConversation = [...conversation, userMessage];
@@ -92,15 +92,34 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
     setIsLoading(true);
 
     try {
+      // Use the correct video context based on whether we're in historical chat or current chat
+      const contextVideoId = selectedChat ? selectedChat.videoId : videoId;
+      const contextVideoTitle = selectedChat ? selectedChat.videoTitle : videoTitle;
+      const contextTranscript = selectedChat ? null : transcript; // Historical chats may not have transcript access
+      
       const aiResponse = await chatWithVideo(
-        videoId,
-        videoTitle,
-        transcript,
+        contextVideoId,
+        contextVideoTitle,
+        contextTranscript,
         updatedConversation
       );
       
       const finalConversation = [...updatedConversation, { role: 'model', content: aiResponse }];
       setConversation(finalConversation);
+      
+      // Store the updated conversation with the correct video ID
+      await storeChat(contextVideoId, contextVideoTitle, finalConversation);
+      
+      // If we're in a historical chat, update the selected chat and refresh history
+      if (selectedChat) {
+        setSelectedChat({
+          ...selectedChat,
+          messages: finalConversation,
+          timestamp: Date.now()
+        });
+        await loadChatHistory(); // Refresh the history list
+      }
+      
     } catch (error) {
       console.error('Chat error:', error);
       setConversation(prev => [...prev, { 
@@ -247,7 +266,7 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-white">
-                  {selectedChat ? 'Saved Chat' : 'AI Chat'}
+                  {selectedChat ? 'Historical Chat' : 'AI Chat'}
                 </h3>
                 {conversation.length > 0 && (
                   <p className="text-xs text-gray-400">
@@ -299,12 +318,29 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
           </div>
         </div>
 
+        {/* Context Banner for Historical Chats */}
+        {selectedChat && (
+          <div className="mx-4 mt-4 p-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border border-blue-500/30 rounded-lg animate-fade-in">
+            <div className="flex items-center space-x-3">
+              <svg className="w-5 h-5 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+              <div className="flex-1">
+                <p className="text-sm text-blue-200 font-medium">Chatting about: {selectedChat.videoTitle}</p>
+                <p className="text-xs text-blue-300/80 mt-1">
+                  This is a historical conversation from {new Date(selectedChat.timestamp).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Messages */}
         <div className="flex-1 p-4 overflow-y-auto scrollbar-thin space-y-4">
           {conversation.length === 0 && !selectedChat && (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-gradient-to-r from-primary-500/20 to-primary-700/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-primary-400\" fill="none\" stroke="currentColor\" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
@@ -372,34 +408,35 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Form - Only show for current chat, not historical ones */}
-        {!selectedChat && (
-          <div className="p-4 border-t border-white/10">
-            <form onSubmit={handleSubmit} className="flex space-x-3">
-              <div className="flex-1 relative">
-                <textarea
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  disabled={isLoading}
-                  placeholder="Ask about this video..."
-                  rows={1}
-                  className="w-full px-4 py-3 bg-dark-700/50 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ minHeight: '48px', maxHeight: '120px' }}
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={isLoading || !message.trim()}
-                className="px-4 py-3 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 disabled:from-gray-600 disabled:to-gray-700 text-white rounded-xl font-medium transition-all duration-200 disabled:cursor-not-allowed shadow-lg shadow-primary-500/25 disabled:shadow-none"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-              </button>
-            </form>
-          </div>
-        )}
+        {/* Input Form - Now shows for both current and historical chats */}
+        <div className="p-4 border-t border-white/10">
+          <form onSubmit={handleSubmit} className="flex space-x-3">
+            <div className="flex-1 relative">
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                disabled={isLoading}
+                placeholder={selectedChat ? 
+                  `Continue chatting about "${selectedChat.videoTitle}"...` : 
+                  "Ask about this video..."
+                }
+                rows={1}
+                className="w-full px-4 py-3 bg-dark-700/50 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ minHeight: '48px', maxHeight: '120px' }}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isLoading || !message.trim()}
+              className="px-4 py-3 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 disabled:from-gray-600 disabled:to-gray-700 text-white rounded-xl font-medium transition-all duration-200 disabled:cursor-not-allowed shadow-lg shadow-primary-500/25 disabled:shadow-none"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
