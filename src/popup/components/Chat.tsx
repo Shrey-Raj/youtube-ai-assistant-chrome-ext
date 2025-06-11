@@ -29,6 +29,7 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
   const [showHistory, setShowHistory] = useState(false);
   const [chatHistory, setChatHistory] = useState<StoredChatItem[]>([]);
   const [selectedChat, setSelectedChat] = useState<StoredChatItem | null>(null);
+  const [showHistoricalChatBanner, setShowHistoricalChatBanner] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -67,6 +68,19 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
       loadCurrentChat();
     }
   }, [videoId, selectedChat]);
+
+  useEffect(() => {
+    if (selectedChat && selectedChat.videoId !== videoId) {
+      setShowHistoricalChatBanner(true);
+      // Auto-hide after 5 seconds
+      const timer = setTimeout(() => {
+        setShowHistoricalChatBanner(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowHistoricalChatBanner(false);
+    }
+  }, [selectedChat, videoId]);
 
   const loadChatHistory = async () => {
     try {
@@ -153,6 +167,7 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
     setSelectedChat(chat);
     setConversation(chat.messages);
     setShowHistory(false);
+    setShowHistoricalChatBanner(true);
   };
 
   const handleBackToCurrent = () => {
@@ -319,7 +334,7 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
         </div>
 
         {/* Context Banner for Historical Chats */}
-        {selectedChat && (
+        {selectedChat && selectedChat.videoId !== videoId && showHistoricalChatBanner && (
           <div className="mx-4 mt-4 p-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border border-blue-500/30 rounded-lg animate-fade-in">
             <div className="flex items-center space-x-3">
               <svg className="w-5 h-5 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -331,6 +346,15 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
                   This is a historical conversation from {new Date(selectedChat.timestamp).toLocaleDateString()}
                 </p>
               </div>
+              <button
+                onClick={() => setShowHistoricalChatBanner(false)}
+                className="p-1 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded transition-colors duration-200"
+                title="Close notification"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           </div>
         )}
@@ -341,7 +365,7 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-gradient-to-r from-primary-500/20 to-primary-700/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-primary-400\" fill="none\" stroke="currentColor\" viewBox="0 0 24 24">
-                  <path strokeLinecap="round\" strokeLinejoin="round\" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
               <p className="text-gray-400 text-sm">Ask me anything about this video!</p>
