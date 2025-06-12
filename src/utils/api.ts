@@ -1,10 +1,10 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getStoredSummary, storeSummary, getStoredChat, storeChat } from './storage';
 
-const getApiKey = async (): Promise<string> => {
+const getApiKey = async (): Promise<string | null> => {
   return new Promise((resolve) => {
     chrome.storage.sync.get(['geminiApiKey'], (result) => {
-      resolve(result.geminiApiKey || 'AIzaSyAX2NRmgSvVQroJya3OD-deGYdHV2WG4SI');
+      resolve(result.geminiApiKey || null);
     });
   });
 };
@@ -24,7 +24,7 @@ export const getVideoSummary = async (
 
     const apiKey = await getApiKey();
     if (!apiKey) {
-      return 'Please set your Gemini API key in extension settings';
+      return 'Please set your Gemini API key in extension settings. Click the settings icon in the top right corner.';
     }
     
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -61,7 +61,16 @@ export const getVideoSummary = async (
     return summary;
   } catch (error: any) {
     console.error('Summary error:', error);
-    return 'Failed to generate summary. Transcript might be unavailable.';
+    
+    if (error.message?.includes('API_KEY_INVALID')) {
+      return 'Invalid API key. Please check your Gemini API key in extension settings.';
+    } else if (error.message?.includes('PERMISSION_DENIED')) {
+      return 'API key lacks required permissions. Please check your Google AI Studio settings.';
+    } else if (error.message?.includes('QUOTA_EXCEEDED')) {
+      return 'API quota exceeded. Please check your usage limits in Google AI Studio.';
+    }
+    
+    return 'Failed to generate summary. Please check your API key and try again.';
   }
 };
 
@@ -73,8 +82,8 @@ export const chatWithVideo = async (
 ): Promise<string> => {
   try {
     const apiKey = await getApiKey();
-    if (!apiKey || apiKey === 'YOUR_API_KEY') {
-      return 'Please set your Gemini API key first';
+    if (!apiKey) {
+      return 'Please set your Gemini API key in extension settings first. Click the settings icon in the top right corner.';
     }
     
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -111,8 +120,17 @@ export const chatWithVideo = async (
     console.log('Updated chat history for video:', videoId);
     
     return response;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Chat error:', error);
-    return "I'm having trouble answering that. Please try again.";
+    
+    if (error.message?.includes('API_KEY_INVALID')) {
+      return 'Invalid API key. Please check your Gemini API key in extension settings.';
+    } else if (error.message?.includes('PERMISSION_DENIED')) {
+      return 'API key lacks required permissions. Please check your Google AI Studio settings.';
+    } else if (error.message?.includes('QUOTA_EXCEEDED')) {
+      return 'API quota exceeded. Please check your usage limits in Google AI Studio.';
+    }
+    
+    return "I'm having trouble answering that. Please check your API key and try again.";
   }
 };

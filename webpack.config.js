@@ -7,7 +7,8 @@ module.exports = {
     popup: './src/popup/index.tsx',
     background: './src/background/service-worker.ts',
     content: './src/content/content.ts',
-    inject: './src/content/inject.ts'
+    inject: './src/content/inject.ts',
+    options: './src/options/options.ts'
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
@@ -35,6 +36,11 @@ module.exports = {
       template: './src/popup/index.html',
       filename: 'popup.html',
       chunks: ['popup']
+    }),
+    new HtmlWebpackPlugin({
+      template: './src/options/options.html',
+      filename: 'options.html',
+      chunks: ['options']
     }),
     new CopyPlugin({
       patterns: [
