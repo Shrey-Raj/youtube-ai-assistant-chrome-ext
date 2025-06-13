@@ -15,20 +15,24 @@ A powerful Chrome extension that uses Google's Gemini AI to summarize YouTube vi
 ### Screenshots
 
 #### Video Summary
-![Video Summary](./public/previews/video-summary.png)
+<img src="./public/previews/video-summary.png" alt="Video Summary" width="300"/>
+
 *AI-generated summary with markdown formatting*
 
 #### Interactive Chat
-![Interactive Chat](./public/previews/chat-interface.png)
+<img src="./public/previews/chat-interface.png" alt="Interactive Chat" width="300"/>
+
 *Chat interface with conversation history*
 
 #### Settings Page
-![Settings Page](./public/previews/settings-page.png)
+<img src="./public/previews/settings-page.png" alt="Settings Page" width="300"/>
+
 *API key configuration and testing*
 
 #### History Management - Chat and Summary
-![Chat History Management](./public/previews/chat-history.png)
-![Summary History Management](./public/previews/summary-history.png)
+<img src="./public/previews/chat-history.png" alt="Chat History Management" width="300"/>
+<img src="./public/previews/summary-history.png" alt="Summary History Management" width="300"/>
+
 *Access to previous summaries and chats*
 
 
