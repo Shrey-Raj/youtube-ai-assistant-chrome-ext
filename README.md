@@ -9,8 +9,17 @@ A powerful Chrome extension that uses Google's Gemini AI to summarize YouTube vi
 ## 🎬 Demo
 
 ### Video Walkthrough
-[![YouTube AI Assistant Demo](screenshots/video-thumbnail.png)](demo-video-url)
-*Click to watch the full demo video*
+
+<div align="center" style="max-width:360px;margin:auto;">
+    <a href="https://www.dropbox.com/scl/fi/c4j7gu07xk1p09arrsbso/youtube-ai-assistant-demo.mp4?rlkey=lggk8lp2v5layt87zq2qd4ry8&st=q6eahmzu&dl=0" target="_blank" style="display:inline-block;position:relative;">
+        <img src="./public/previews/thumbnail.png" alt="YouTube AI Assistant Demo" width="320" style="border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.15);"/>
+        <img src="https://img.icons8.com/ios-filled/50/ffffff/play--v1.png" alt="Play" width="64" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.85;"/>
+    </a>
+    <div style="margin-top:8px;font-size:0.95em;color:#888;">
+        <em>Click to watch the full demo video</em>
+    </div>
+</div>
+
 
 ### Screenshots
 
