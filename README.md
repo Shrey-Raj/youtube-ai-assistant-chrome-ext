@@ -14,6 +14,24 @@ A powerful Chrome extension that uses Google's Gemini AI to summarize YouTube vi
 </a>
 
 
+### Installation
+
+1. **Load Extension in Chrome**
+   - Download the build (`dist`) folder from [this link](https://www.dropbox.com/scl/fi/iwy6pu8szma3tzt0jrdle/dist.rar?rlkey=q0awaxsm4rpfom4f5yb4g28z6&e=1&st=hmnlr0id&dl=0).
+
+2. **Load Extension in Chrome**
+   - Open Chrome and navigate to `chrome://extensions/`
+   - Enable "Developer mode" (toggle in top-right)
+   - Click "Load unpacked"
+   - Select the `dist` folder from your computer.
+
+3. **Configure API Key**
+   - Click the extension icon in Chrome toolbar
+   - Click the settings gear icon
+   - Follow the instructions to get a Gemini API key
+   - Enter and test your API key
+
+
 ### Screenshots
 
 #### Video Summary
@@ -93,7 +111,7 @@ YouTube Video → Extension Popup → Summary/Chat → History
 - Chrome browser
 - Gemini API key from Google AI Studio
 
-### Installation Steps
+### Run the extension locally
 
 1. **Clone the Repository**
    ```bash
