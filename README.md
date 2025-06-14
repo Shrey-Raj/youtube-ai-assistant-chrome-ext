@@ -33,27 +33,34 @@ A powerful Chrome extension that uses Google's Gemini AI to summarize YouTube vi
 
 
 ### Screenshots
-
-#### Video Summary
-<img src="./public/previews/video-summary.png" alt="Video Summary" width="300"/>
-
-*AI-generated summary with markdown formatting*
-
-#### Interactive Chat
-<img src="./public/previews/chat-interface.png" alt="Interactive Chat" width="300"/>
-
-*Chat interface with conversation history*
-
-#### Settings Page
-<img src="./public/previews/settings-page.png" alt="Settings Page" width="300"/>
-
-*API key configuration and testing*
-
-#### History Management - Chat and Summary
-<img src="./public/previews/chat-history.png" alt="Chat History Management" width="300"/>
-<img src="./public/previews/summary-history.png" alt="Summary History Management" width="300"/>
-
-*Access to previous summaries and chats*
+<table>
+   <tr>
+      <td align="center">
+         <img src="./public/previews/video-summary.png" alt="Video Summary" width="300"/><br/>
+         <sub>AI-generated summary with markdown formatting</sub>
+      </td>
+      <td align="center">
+         <img src="./public/previews/chat-interface.png" alt="Interactive Chat" width="300"/><br/>
+         <sub>Chat interface with conversation history</sub>
+      </td>
+   </tr>
+   <tr>
+      <td align="center">
+         <img src="./public/previews/settings-page.png" alt="Settings Page" width="300"/><br/>
+         <sub>API key configuration and testing</sub>
+      </td>
+      <td align="center">
+         <img src="./public/previews/chat-history.png" alt="Chat History Management" width="300"/><br/>
+         <sub>Access to previous chat histories</sub>
+      </td>
+   </tr>
+   <tr>
+      <td align="center" colspan="2">
+         <img src="./public/previews/summary-history.png" alt="Summary History Management" width="300"/><br/>
+         <sub>Access to previous summaries</sub>
+      </td>
+   </tr>
+</table>
 
 
 ## 🎯 Features
