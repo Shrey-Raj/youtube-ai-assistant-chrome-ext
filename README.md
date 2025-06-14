@@ -1,8 +1,9 @@
-# YouTube AI Assistant Chrome Extension
+# <img src="./public/icons/icon128.png" alt="Extension Icon" width="32" height="32" style="vertical-align:middle; margin-right:8px;" /> YouTube AI Assistant Chrome Extension
 
 A powerful Chrome extension that uses Google's Gemini AI to summarize YouTube videos and provide interactive chat functionality. Get instant insights from any YouTube video without watching the entire content.
-
-<img src="./public/icons/icon128.png" />
+<p align="center">
+   <img src="./public/icons/icon128.png" alt="Extension Icon" />
+</p>
 
 
 
