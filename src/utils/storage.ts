@@ -17,16 +17,13 @@ export interface StorageData {
   chats: { [videoId: string]: StoredChat };
 }
 
-// Storage keys
 const STORAGE_KEYS = {
   SUMMARIES: 'youtube_summaries',
   CHATS: 'youtube_chats'
 };
 
-// Cache duration (7 days in milliseconds)
 const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000;
 
-// Get all stored data
 export const getStorageData = async (): Promise<StorageData> => {
   return new Promise((resolve) => {
     chrome.storage.local.get([STORAGE_KEYS.SUMMARIES, STORAGE_KEYS.CHATS], (result) => {
@@ -38,14 +35,12 @@ export const getStorageData = async (): Promise<StorageData> => {
   });
 };
 
-// Summary storage functions
 export const getStoredSummary = async (videoId: string): Promise<string | null> => {
   const data = await getStorageData();
   const stored = data.summaries[videoId];
   
   if (!stored) return null;
   
-  // Check if cache is expired
   if (Date.now() - stored.timestamp > CACHE_DURATION) {
     await removeSummary(videoId);
     return null;
@@ -82,14 +77,12 @@ export const removeSummary = async (videoId: string): Promise<void> => {
   });
 };
 
-// Chat storage functions
 export const getStoredChat = async (videoId: string): Promise<Array<{ role: string; content: string }> | null> => {
   const data = await getStorageData();
   const stored = data.chats[videoId];
   
   if (!stored) return null;
   
-  // Check if cache is expired
   if (Date.now() - stored.timestamp > CACHE_DURATION) {
     await removeChat(videoId);
     return null;
@@ -130,7 +123,6 @@ export const removeChat = async (videoId: string): Promise<void> => {
   });
 };
 
-// Clear all stored data
 export const clearAllStorage = async (): Promise<void> => {
   return new Promise((resolve) => {
     chrome.storage.local.remove([STORAGE_KEYS.SUMMARIES, STORAGE_KEYS.CHATS], () => {
@@ -139,7 +131,6 @@ export const clearAllStorage = async (): Promise<void> => {
   });
 };
 
-// Get storage usage info
 export const getStorageInfo = async (): Promise<{
   summaryCount: number;
   chatCount: number;

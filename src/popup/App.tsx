@@ -26,20 +26,18 @@ const App: React.FC = () => {
         setLoading(true);
         chrome.runtime.sendMessage(
           { type: 'GET_VIDEO_DATA' }, 
-          async (response) => {
+          async (response: any) => {
             if (response.videoId) {
               setVideoId(response.videoId);
               setVideoTitle(response.videoTitle);
               setTranscript(response.transcript);
               
-              // Show success banner if transcript is available
               if (response.transcript) {
                 setShowSuccessBanner(true);
                 console.log('Transcript available, generating summary...');
                 fetchSummary(response.videoId, response.videoTitle, response.transcript);
               } else {
                 console.log('No transcript initially available, will try to load...');
-                // Still generate summary but show warning
                 fetchSummary(response.videoId, response.videoTitle, null);
               }
             } else {
@@ -65,6 +63,8 @@ const App: React.FC = () => {
     try {
       setLoading(true);
       const summaryText = await getVideoSummary(id, title, transcript);
+      console.log("Transcript: ", transcript); 
+      console.log("Summary: ", summary);
       setSummary(summaryText);
       setError(null);
     } catch (error) {
@@ -78,7 +78,6 @@ const App: React.FC = () => {
   const handleSummaryCleared = async () => {
     if (!videoId) return;
     
-    // Regenerate summary after clearing
     setSummary('');
     setLoading(true);
     
@@ -103,7 +102,6 @@ const App: React.FC = () => {
           type: 'OPEN_TRANSCRIPT' 
         });
         
-        // Wait a moment then try to get transcript again
         setTimeout(() => {
           chrome.tabs.sendMessage(tab.id as number, { 
             type: 'GET_VIDEO_DETAILS' 
@@ -182,7 +180,6 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* Warning for missing transcript */}
       {!transcript && (
         <div className="mx-4 mt-4 p-3 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-lg animate-fade-in">
           <div className="flex items-start space-x-3">
@@ -212,7 +209,6 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Success message for transcript with close button */}
       {transcript && showSuccessBanner && (
         <div className="mx-4 mt-4 p-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-lg animate-fade-in">
           <div className="flex items-center space-x-3">
@@ -238,10 +234,8 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Navigation */}
       <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
 
-      {/* Content */}
       <div className="flex-1 overflow-hidden">
         {activeTab === 'summary' ? (
           <Summary 

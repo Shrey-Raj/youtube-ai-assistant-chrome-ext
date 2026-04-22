@@ -1,20 +1,16 @@
-// Options page functionality
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('settingsForm') as HTMLFormElement;
   const apiKeyInput = document.getElementById('apiKey') as HTMLInputElement;
   const testBtn = document.getElementById('testBtn') as HTMLButtonElement;
   const statusDiv = document.getElementById('status') as HTMLDivElement;
 
-  // Load saved settings
   loadSettings();
 
-  // Form submission
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     saveSettings();
   });
 
-  // Test API key
   testBtn.addEventListener('click', () => {
     testApiKey();
   });
@@ -59,13 +55,11 @@ document.addEventListener('DOMContentLoaded', () => {
     testBtn.textContent = 'Testing...';
     
     try {
-      // Import Gemini AI library dynamically
       const { GoogleGenerativeAI } = await import('@google/generative-ai');
       
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
       
-      // Test with a simple prompt
       const result = await model.generateContent('Say "API key is working" if you can read this.');
       const response = result.response.text();
       
@@ -97,7 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
     statusDiv.className = `status ${type}`;
     statusDiv.style.display = 'block';
     
-    // Auto-hide success messages after 3 seconds
     if (type === 'success') {
       setTimeout(() => {
         statusDiv.style.display = 'none';
