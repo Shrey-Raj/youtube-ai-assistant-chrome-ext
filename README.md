@@ -216,7 +216,7 @@ dist/                 # Built extension (generated)
 5. Configure usage limits as needed (optional)
 
 ### API Usage
-- **Model**: `gemini-2.0-flash-lite`
+- **Model**: `gemini-2.5-flash-lite`
 - **Rate Limits**: Follows Google AI Studio limits
 - **Caching**: 7-day local cache to minimize API calls
 - **Error Handling**: Comprehensive error messages for different scenarios
