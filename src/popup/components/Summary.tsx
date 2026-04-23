@@ -29,7 +29,7 @@ const Summary: React.FC<SummaryProps> = ({ text, videoId, onSummaryCleared }) =>
       const data = await getStorageData();
       const summaries = Object.values(data.summaries)
         .sort((a, b) => b.timestamp - a.timestamp)
-        .slice(0, 10); // Show last 10 summaries
+        .slice(0, 10); 
       setSummaryHistory(summaries);
     } catch (error) {
       console.error('Error loading summary history:', error);
@@ -42,7 +42,7 @@ const Summary: React.FC<SummaryProps> = ({ text, videoId, onSummaryCleared }) =>
     try {
       await removeSummary(videoId);
       console.log('Cleared summary for video:', videoId);
-      await loadSummaryHistory(); // Refresh history
+      await loadSummaryHistory(); 
       if (onSummaryCleared) {
         onSummaryCleared();
       }

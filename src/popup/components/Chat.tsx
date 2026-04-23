@@ -44,7 +44,6 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
     loadChatHistory();
   }, []);
 
-  // Load chat history when component mounts or videoId changes
   useEffect(() => {
     if (!selectedChat) {
       const loadCurrentChat = async () => {
@@ -72,7 +71,6 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
   useEffect(() => {
     if (selectedChat && selectedChat.videoId !== videoId) {
       setShowHistoricalChatBanner(true);
-      // Auto-hide after 5 seconds
       const timer = setTimeout(() => {
         setShowHistoricalChatBanner(false);
       }, 5000);
@@ -87,7 +85,7 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
       const data = await getStorageData();
       const chats = Object.values(data.chats)
         .sort((a, b) => b.timestamp - a.timestamp)
-        .slice(0, 10); // Show last 10 chats
+        .slice(0, 10); 
       setChatHistory(chats);
     } catch (error) {
       console.error('Error loading chat history:', error);
@@ -106,10 +104,9 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
     setIsLoading(true);
 
     try {
-      // Use the correct video context based on whether we're in historical chat or current chat
       const contextVideoId = selectedChat ? selectedChat.videoId : videoId;
       const contextVideoTitle = selectedChat ? selectedChat.videoTitle : videoTitle;
-      const contextTranscript = selectedChat ? null : transcript; // Historical chats may not have transcript access
+      const contextTranscript = selectedChat ? null : transcript; 
       
       const aiResponse = await chatWithVideo(
         contextVideoId,
@@ -121,17 +118,15 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
       const finalConversation = [...updatedConversation, { role: 'model', content: aiResponse }];
       setConversation(finalConversation);
       
-      // Store the updated conversation with the correct video ID
       await storeChat(contextVideoId, contextVideoTitle, finalConversation);
       
-      // If we're in a historical chat, update the selected chat and refresh history
       if (selectedChat) {
         setSelectedChat({
           ...selectedChat,
           messages: finalConversation,
           timestamp: Date.now()
         });
-        await loadChatHistory(); // Refresh the history list
+        await loadChatHistory();
       }
       
     } catch (error) {
@@ -148,7 +143,6 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
   const handleClearChat = async () => {
     try {
       if (selectedChat) {
-        // Remove from storage and refresh history
         await removeChat(selectedChat.videoId);
         await loadChatHistory();
         setSelectedChat(null);
@@ -172,7 +166,6 @@ const Chat: React.FC<ChatProps> = ({ videoId, videoTitle, transcript }) => {
 
   const handleBackToCurrent = () => {
     setSelectedChat(null);
-    // Reload current chat
     const loadCurrentChat = async () => {
       const storedChat = await getStoredChat(videoId);
       setConversation(storedChat || []);
