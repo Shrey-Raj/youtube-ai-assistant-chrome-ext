@@ -15,9 +15,16 @@ export const getVideoSummary = async (
   transcript: string | null
 ): Promise<string> => {
   try {
+
+  // console.log("DEBUG: api.ts - Received transcript length:", transcript?.length || 0);
+
+  if (!transcript) {
+    console.warn("DEBUG: No transcript found. Falling back to title-only summary.");
+  }
+
     const cachedSummary = await getStoredSummary(videoId);
     if (cachedSummary) {
-      console.log('Using cached summary for video:', videoId);
+      // console.log('Using cached summary for video:', videoId);
       return cachedSummary;
     }
 
@@ -29,30 +36,12 @@ export const getVideoSummary = async (
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' }); 
     
-    // let prompt;
-    // if (transcript) {
-    //   if (transcript.startsWith('http')) {
-    //     prompt = `Generate a summary for the YouTube video "${videoTitle}" (ID: ${videoId}) using its transcript.`;
-    //   } else {
-    //     prompt = `Generate a comprehensive summary of this YouTube video transcript:
-        
-    //     Video Title: ${videoTitle}
-    //     Video ID: ${videoId}
-        
-    //     Transcript:
-    //     ${transcript.substring(0, 30000)}`; 
-    //   }
-    // } else {
-    //   prompt = `Generate a summary for the YouTube video titled "${videoTitle}" (ID: ${videoId}) based on its title.`;
-    // }
-
-    // Replace your prompt logic with this:
     let prompt;
     if (transcript && !transcript.startsWith('http')) {
         prompt = `You are a professional video summarizer. Provide a concise, structured summary of the following YouTube video transcript.
         
         Video Title: ${videoTitle}
-        Transcript: ${transcript.substring(0, 35000)}`; // Using more context for flash-lite
+        Transcript: ${transcript.substring(0, 35000)}`;
     } else {
         prompt = `Provide a brief overview of what a YouTube video titled "${videoTitle}" would likely be about. 
         Note: Full transcript was unavailable.`;
@@ -60,9 +49,11 @@ export const getVideoSummary = async (
     
     const result = await model.generateContent(prompt);
     const summary = result.response.text();
+
+    // const summary = "DUMMY SUMMARY UNTIL WE GET TRANSCRIPT-BASED GENERATION WORKING";
     
     await storeSummary(videoId, videoTitle, summary);
-    console.log('Generated and cached new summary for video:', videoId);
+    // console.log('Generated and cached new summary for video:', videoId);
     
     return summary;
   } catch (error: any) {
@@ -121,7 +112,7 @@ export const chatWithVideo = async (
     
     const updatedHistory = [...history, { role: 'model', content: response }];
     await storeChat(videoId, videoTitle, updatedHistory);
-    console.log('Updated chat history for video:', videoId);
+    // console.log('Updated chat history for video:', videoId);
     
     return response;
   } catch (error: any) {
